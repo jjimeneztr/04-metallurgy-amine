@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Amine Corrosion</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" />
+  <link rel="icon" href="../static/img/logo.png" type="image/png" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css"
+    crossorigin="anonymous" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.4/xlsx.full.min.js"></script>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
+  <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+
+  <style>
+    @import url("https://fonts.googleapis.com/css2?family=Quicksand&display=swap");
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: "Quicksand", sans-serif;
+    }
+
+    .btn-primary {
+      color: #fff;
+      background-color: #7393ac;
+      border-color: #7393ac;
+      transition: background-color 0.3s ease;
+    }
+
+    .btn-primary:hover {
+      background-color: rgb(102, 152, 202);
+      border-color: rgb(102, 152, 202);
+    }
+
+    ::-webkit-scrollbar {
+      width: 7px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #7393ac;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background-color: #ffffff;
+      border-radius: 10px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background-color: #969696;
+    }
+
+    #acidGasLoading-info {
+      display: none;
+    }
+
+    /* Estilos básicos */
+    .info-icon-container {
+      position: relative;
+      display: inline-block;
+    }
+
+    /* Estilos del tooltip oculto */
+    .tooltip-content {
+      display: none;
+      position: absolute;
+      top: 30px;
+      /* Ajusta la posición del tooltip */
+      left: 0;
+      background-color: white;
+      border: 1px solid #ccc;
+      padding: 10px;
+      z-index: 1000;
+      width: 600px;
+      /* Ajusta el ancho del tooltip */
+      box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+      border-radius: 10px;
+    }
+
+    /* Mostrar el tooltip cuando se pasa el cursor por encima del icono */
+    .info-icon-container:hover .tooltip-content {
+      display: block;
+    }
+
+    /* Estilos adicionales */
+    .tooltip-content p {
+      margin: 0;
+      padding: 0;
+      font-size: 14px;
+    }
+
+    .tooltip-content img {
+      width: 100%;
+      height: auto;
+      margin-top: 10px;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+
+<body data-bs-theme="light">
+  <nav class="navbar navbar-expand-lg" style="background-color: #7c94ba">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="#" style="margin-left: 50px">
+        <img src="../static/img/trlogo_white.png" alt="Logo" width="120" height="66" />
+      </a>
+      <div class="collapse navbar-collapse mx-5" id="navbarSupportedContent">
+        <ul class="navbar-nav mb-lg-0" style="margin-left: 50px">
+          <li class="nav-item">
+            <a href="#" class="nav-link text-light active">API RP 941-2016</a>
+          </li>
+          <li class="nav-item" style="margin-left: 50px">
+            <a href="#" class="nav-link text-light active">NACE SP0403-2015</a>
+          </li>
+          <li class="nav-item" style="margin-left: 50px">
+            <a href="#" class="nav-link text-light active">API TR 938 C 2015</a>
+          </li>
+          <li class="nav-item" style="margin-left: 50px">
+            <a href="#" class="nav-link text-light active">API RP 581 2016 Section 2.B.11</a>
+          </li>
+        </ul>
+      </div>
+      <button onclick="changeTheme()" class="btn rounded-fill">
+        <i id="dl-icon" class="bi bi-moon" style="font-size: 24px; color: aliceblue"></i>
+      </button>
+      <p style="
+            font-size: 42px;
+            color: rgba(240, 248, 255, 0.747);
+            margin-top: 13px;
+            border-radius: 15px;
+          ">
+        |
+      </p>
+      <a href="#" class="btn rounded-fill text-light">
+        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ffffff"
+          stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-log-out">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+          <polyline points="16 17 21 12 16 7" />
+          <line x1="21" x2="9" y1="12" y2="12" />
+        </svg>
+      </a>
+    </div>
+  </nav>
+  <div class="container mt-4" id="pdf-content">
+    <h1 class="mb-4 mt-5">Corrosion Rate Prediction Tool for Carbon Steel and Stainless Steel in Amine Solutions</h1>
+    <p>This tool forecasts the corrosion rates of carbon steel and stainless steel materials when exposed to amine
+      solutions
+      (MEA, DEA, and MDEA) that contain acid gases (H2S and/or CO2). It aligns with the guidelines outlined in DM#45 of
+      API RP
+      571.
+    </p>
+
+    <h5>Bulk Calculation
+      <span class="info-icon-container">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"
+          class="lucide lucide-info" style="color: #a7a7a7;">
+          <circle cx="12" cy="12" r="10" />
+          <path d="M12 16v-4" />
+          <path d="M12 8h.01" />
+        </svg>
+
+        <!-- Contenido del tooltip -->
+        <div class="tooltip-content">
+          <p>It is crucial that the Excel file you upload follows this structure. The columns must be named exactly as
+            shown;
+            otherwise, it may not work properly.</p>
+          <img src="{{ url_for('static', filename='img/data_structure.png') }}" alt="Structure Excel File">
+        </div>
+      </span>
+    </h5>
+    <p>To streamline data entry, you can upload your data using an Excel file. Click on the icon to see detailed
+      instructions on how to prepare and upload your file.</p>
+    <h5>Data Manually</h5>
+    <p>If you prefer, you can also enter your data directly into the form provided below.</p>
+
+    <!-- Bulk calculation Excel-->
+    <div id="bulk_calculation_container" class="mt-4 p-3 mb-2 bg-light" style="border-radius: 20px">
+
+      <div id="fileUpload-group" class="form-group mt-4">
+        <div class="col">
+          <input type="file" id="fileInput" class="form-control" accept=".xlsx" />
+          <p id="file-info" style="margin-top: 15px; color: #969696"></p>
+        </div>
+      </div>
+      <br>
+      <div class="p-3">
+        <div class="card">
+          <div class="card-body">
+            <table id="excelTable" class="table table-striped table-bordered" width="100%"></table>
+          </div>
+        </div>
+      </div>
+
+      <div id="button-group-excel" class="mt-4">
+        <button onclick="uploadFile()" class="btn btn-primary mt-4" id="bulk-btn" disabled>Calculate BULK
+          CR</button>
+        <button onclick="downloadExcel()" class="btn btn-success mt-4" id="download-btn" style="display: none;">Download
+          Excel</button>
+      </div>
+
+
+    </div>
+    <!-- Manual Calculation-->
+    <div id="manual_calculation_container">
+      <div class="row">
+        <div class="col">
+          <!-- Material Selection-->
+          <div class="form-group mt-4" id="material-group">
+            <label for="material" class="mr-2">Select material:</label>
+            <select id="material" class="form-control" onchange="handleMaterialSelection()">
+              <option value="">Select...</option>
+              <option value="CS">CS</option>
+              <option value="Low Alloy Steel">Low Alloy Steel</option>
+              <option value="300 Series SS">300 Series SS</option>
+            </select>
+          </div>
+        </div>
+        <div class="col">
+          <!-- Temperatura Selection-->
+          <div id="temperature-group" class="form-group mt-4" style="display: none">
+            <label for="temperatureLoading" class="mr-2">Operating Temperature (ºC o ºF):</label>
+            <input type="number" id="temperatureLoading" class="form-control" step="1"
+              oninput="showNext('acidGasLoading-group')" />
+          </div>
+        </div>
+        <div class="col">
+          <!-- Loading Acid Selection -->
+          <div id="acidGasLoading-group" class="form-group mt-4" style="display: none">
+            <label for="acidGasLoading" class="mr-2">Acid Gas Loading (mol/mol):</label>
+            <input type="number" id="acidGasLoading" class="form-control" step="0.01" />
+
+          </div>
+          <div id="acidGasLoading-info" style="display: none">
+            <p style="margin-top: 15px; color: #969696">
+              * Reliable calculation if Top ≤ 149 ºC
+            </p>
+            <button style="margin-top: 25px" class="btn btn-primary" onclick="calcularCR_300ss()">
+              Calculate
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col">
+          <!-- Type Amine Selection-->
+          <div id="typeAmine-group" class="form-group mt-4" style="display: none">
+            <label for="typeAmine" class="mr-2">Amine type:</label>
+            <select id="typeAmine" class="form-control"
+              onchange="showNext('amineConcentration-group'); updatePlaceholder();">
+              <option value="">Select...</option>
+              <option value="MEA">MEA</option>
+              <option value="DEA">DEA</option>
+              <option value="MDEA">MDEA</option>
+            </select>
+          </div>
+        </div>
+        <div class="col">
+          <!-- Amine Concentration Selection-->
+          <div id="amineConcentration-group" class="form-group mt-4" style="display: none">
+            <label for="amineConcentration" class="mr-2">Enter the amine concentration (wt%):</label>
+            <input type="number" id="amineConcentration" class="form-control" step="1"
+              oninput="validateAmineConcentration(); showNext('HSAScontent-group')" required />
+          </div>
+        </div>
+        <div class="col">
+          <!-- HSAS Selection-->
+          <div id="HSAScontent-group" class="form-group mt-4" style="display: none">
+            <label for="HSAScontent" class="mr-2">HSAS (wt%):</label>
+            <input type="number" id="HSAScontent" class="form-control" step="1" oninput="showNext('velocity-group')" />
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col">
+          <!-- Velocity Selection-->
+          <div id="velocity-group" class="form-group mt-4" style="display: none">
+            <label for="velocity" class="mr-2">Velocity (ft/s o m/s):</label>
+            <input type="number" id="velocity" class="form-control" step="1" oninput="showNext('button-group')" />
+          </div>
+        </div>
+        <div class="col">
+          <!-- Calculate CR - LOW ALLOW STEEL BUTTON -->
+          <div id="button-group" style="display: none" class="mt-4">
+            <button onclick="calcularCR()" class="btn btn-primary mt-4" id="calcular-btn">
+              Calculate CR
+            </button>
+          </div>
+        </div>
+        <div class="col">
+
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Result -->
+    <div id="result" class="mt-4 p-3 mb-2 bg-light" style="border-radius: 20px"></div>
+
+    <script>
+      const themeDark = () => {
+        document.querySelector("body").setAttribute("data-bs-theme", "dark");
+        document
+          .querySelector("#dl-icon")
+          .setAttribute("class", "bi bi-sun-fill");
+        document.querySelector("#result").classList.remove("bg-light");
+        document.querySelector("#result").classList.add("bg-dark");
+      };
+
+      const themeLight = () => {
+        document.querySelector("body").setAttribute("data-bs-theme", "light");
+        document
+          .querySelector("#dl-icon")
+          .setAttribute("class", "bi bi-moon-fill");
+        document.querySelector("#result").classList.remove("bg-dark");
+        document.querySelector("#result").classList.add("bg-light");
+      };
+
+      const changeTheme = () => {
+        document.querySelector("body").getAttribute("data-bs-theme") === "light"
+          ? themeDark()
+          : themeLight();
+      };
+
+      function handleMaterialSelection() {
+        const material = document.getElementById("material").value;
+        // Guardar la selección del material en sessionStorage
+        sessionStorage.setItem('selectedMaterial', material);
+
+        console.log(material)
+        const acidGasLoadingGroup = document.getElementById(
+          "acidGasLoading-group"
+        );
+        const acidGasLoadingInfo = document.getElementById(
+          "acidGasLoading-info"
+        );
+        const temperatureGroup = document.getElementById("temperature-group");
+        const typeAmineGroup = document.getElementById("typeAmine-group");
+        const amineConcentrationGroup = document.getElementById(
+          "amineConcentration-group"
+        );
+        const HSAScontentGroup = document.getElementById("HSAScontent-group");
+        const velocityGroup = document.getElementById("velocity-group");
+        const buttonGroup = document.getElementById("button-group");
+        // const fileUploadGroup = document.getElementById("fileUpload-group");
+        // Limpiar valores de los campos
+        document.getElementById("temperatureLoading").value = '';
+        document.getElementById("acidGasLoading").value = '';
+        document.getElementById("typeAmine").value = '';
+        document.getElementById("amineConcentration").value = '';
+        document.getElementById("HSAScontent").value = '';
+        document.getElementById("velocity").value = '';
+
+        // Ocultar secciones
+        temperatureGroup.style.display = "none";
+        acidGasLoadingGroup.style.display = "none";
+        acidGasLoadingInfo.style.display = "none";
+        typeAmineGroup.style.display = "none";
+        amineConcentrationGroup.style.display = "none";
+        HSAScontentGroup.style.display = "none";
+        velocityGroup.style.display = "none";
+        buttonGroup.style.display = "none";
+
+        if (material === "CS" || material === "Low Alloy Steel") {
+          // console.log('CS', material)
+          temperatureGroup.style.display = "block";
+          acidGasLoadingGroup.setAttribute('oninput', 'showNext(\'typeAmine-group\')');
+          // fileUploadGroup.style.display = "none";
+          acidGasLoadingGroup.style.display = "none";
+          acidGasLoadingInfo.style.display = 'none';
+          typeAmineGroup.style.display = "none";
+          buttonGroup.style.display = "none";
+          document.getElementById("acidGasLoading").placeholder = "";
+        } else if (material === "300 Series SS") {
+          temperatureGroup.style.display = "none";
+          // fileUploadGroup.style.display = "block";
+          acidGasLoadingGroup.style.display = "block";
+          acidGasLoadingInfo.style.display = 'block';
+          typeAmineGroup.style.display = "none";
+          buttonGroup.style.display = "none";
+          document.getElementById("acidGasLoading").placeholder = "0.1, 0.15, 0.25, 0.35, 0.45, 0.55, 0.65, 0.7";
+          // Asegúrate de ocultar los campos posteriores
+          amineConcentrationGroup.style.display = "none";
+          HSAScontentGroup.style.display = "none";
+          velocityGroup.style.display = "none";
+
+        }
+      }
+
+      function showNext(nextId) {
+        const nextElement = document.getElementById(nextId);
+        if (nextElement) {
+          nextElement.style.display = "block";
+        }
+      }
+
+      function validateAmineConcentration() {
+        const typeAmine = document.getElementById("typeAmine").value;
+        const amineConcentrationInput =
+          document.getElementById("amineConcentration");
+        const amineConcentration = parseFloat(amineConcentrationInput.value);
+
+        let isValid = false;
+
+        if (typeAmine === "MEA") {
+          isValid =
+            amineConcentration <= 20 ||
+            (amineConcentration >= 21 && amineConcentration <= 25) ||
+            amineConcentration > 25;
+        } else if (typeAmine === "DEA") {
+          isValid =
+            amineConcentration <= 30 ||
+            (amineConcentration >= 31 && amineConcentration <= 40) ||
+            amineConcentration > 40;
+        } else if (typeAmine === "MDEA") {
+          isValid = amineConcentration <= 50;
+        }
+
+        if (isValid) {
+          amineConcentrationInput.setCustomValidity("");
+          showNext("HSAScontent-group");
+        } else {
+          amineConcentrationInput.setCustomValidity(
+            "Invalid concentration for the selected amine type."
+          );
+          amineConcentrationInput.reportValidity();
+        }
+      }
+
+      function updatePlaceholder() {
+        const typeAmine = document.getElementById("typeAmine").value;
+        const amineConcentrationInput =
+          document.getElementById("amineConcentration");
+
+        if (typeAmine === "MEA") {
+          amineConcentrationInput.placeholder =
+            "Allowed Values: ≤20, 21-25, >25";
+        } else if (typeAmine === "DEA") {
+          amineConcentrationInput.placeholder =
+            "Allowed Values: ≤30, 31-40, >40";
+        } else if (typeAmine === "MDEA") {
+          amineConcentrationInput.placeholder = "Allowed Values: ≤50";
+        } else {
+          amineConcentrationInput.placeholder = "";
+        }
+      }
+
+      function calcularCR_300ss() {
+        const acidGasLoading = document.getElementById("acidGasLoading").value;
+
+        fetch("/calculate_cr_300ss", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ acidGasLoading: acidGasLoading }),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            const resultDiv = document.getElementById("result");
+
+            // Crear una tabla HTML
+            const table = document.createElement("table");
+            table.style.width = "100%";
+            table.setAttribute("border", "1", "50px");
+
+            // Crear la cabecera de la tabla
+            const thead = document.createElement("thead");
+            const headerRow = document.createElement("tr");
+            const headers = [
+              "Acid Gas Loading (mol/mol)",
+              "CR (mm/y)",
+              "CR (mpy)",
+            ];
+            headers.forEach((headerText) => {
+              const th = document.createElement("th");
+              th.appendChild(document.createTextNode(headerText));
+              headerRow.appendChild(th);
+            });
+            thead.appendChild(headerRow);
+            table.appendChild(thead);
+
+            // Crear el cuerpo de la tabla
+            const tbody = document.createElement("tbody");
+            const row = document.createElement("tr");
+
+            const values = [
+              acidGasLoading,
+              data.cr_mm_year.toFixed(2),
+              data.cr_mpy,
+            ];
+            values.forEach((value) => {
+              const td = document.createElement("td");
+              td.appendChild(document.createTextNode(value));
+              row.appendChild(td);
+            });
+
+            tbody.appendChild(row);
+            table.appendChild(tbody);
+
+            resultDiv.innerHTML = "";
+            resultDiv.appendChild(table);
+          })
+          .catch((error) => console.error("Error:", error));
+      }
+
+      async function calcularCR() {
+        // Obtener los valores de los elementos del DOM
+        const material = document.getElementById("material").value;
+        const temperatureLoading = document.getElementById("temperatureLoading").value;
+        const acidGasLoading = document.getElementById("acidGasLoading").value;
+        const typeAmine = document.getElementById("typeAmine").value;
+        const amineConcentration = document.getElementById("amineConcentration").value;
+        const HSAScontent = document.getElementById("HSAScontent").value;
+        const velocity = document.getElementById("velocity").value;
+
+        // Preparar los datos para enviar, incluyendo typeAmine
+        const requestData = {
+          acid_gas_loading: parseFloat(acidGasLoading),
+          temperature: parseInt(temperatureLoading),
+          velocity: parseFloat(velocity),
+          hsas: parseFloat(HSAScontent),
+          material: material, // Incluye el material
+          typeAmine: typeAmine // Incluye el tipo de amina
+        };
+
+        try {
+          // Realizar la solicitud POST a la API
+          const response = await fetch('/procesar', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(requestData)
+          });
+
+          // Procesar la respuesta
+          if (response.ok) {
+            const result = await response.json();
+            console.log('Response JSON:', result); // Depuración: Imprime la respuesta JSON en la consola
+
+            const cr = result.cr; // Accede al valor 'cr'
+
+            if (cr === undefined || cr === null) {
+              throw new Error('CR value is undefined or null in the response.');
+            }
+
+            // Crear la tabla con los resultados
+            const table = document.createElement("table");
+            table.style.width = "100%";
+            table.setAttribute("border", "1");
+
+            // Crear la cabecera de la tabla
+            const thead = document.createElement("thead");
+            const headerRow = document.createElement("tr");
+            const headers = [
+              "Material",
+              "Operating Temperature",
+              "Acid Gas Load",
+              "Amine Type",
+              "Amine Concentration",
+              "HSAS",
+              "Velocity",
+              "CR Value"
+            ];
+            headers.forEach((headerText) => {
+              const th = document.createElement("th");
+              th.appendChild(document.createTextNode(headerText));
+              headerRow.appendChild(th);
+            });
+            thead.appendChild(headerRow);
+            table.appendChild(thead);
+
+            // Crear el cuerpo de la tabla
+            const tbody = document.createElement("tbody");
+            const row = document.createElement("tr");
+
+            const values = [
+              material,
+              temperatureLoading,
+              acidGasLoading,
+              typeAmine, // Añadimos el tipo de amina
+              amineConcentration,
+              HSAScontent,
+              velocity,
+              cr // Añadimos el valor CR calculado
+            ];
+            values.forEach((value) => {
+              const td = document.createElement("td");
+              td.appendChild(document.createTextNode(value));
+              row.appendChild(td);
+            });
+
+            tbody.appendChild(row);
+            table.appendChild(tbody);
+
+            // Limpiar el contenido previo y añadir la nueva tabla
+            const resultDiv = document.getElementById("result");
+            resultDiv.innerHTML = "";
+            resultDiv.appendChild(table);
+          } else {
+            const errorData = await response.json();
+            document.getElementById("result").innerHTML = `<p>${errorData.error}</p>`;
+          }
+        } catch (error) {
+          document.getElementById("result").innerHTML = `<p>Error al realizar la solicitud: ${error.message}</p>`;
+        }
+      }
+
+      // FILE INPUT
+      document.getElementById('fileInput').addEventListener('change', handleFile, false);
+
+      function handleFile(e) {
+        const file = e.target.files[0];
+        if (!file) {
+          return;
+        }
+
+        const reader = new FileReader();
+
+        reader.onload = function (event) {
+          const data = new Uint8Array(event.target.result);
+          const workbook = XLSX.read(data, { type: 'array' });
+          const firstSheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[firstSheetName];
+
+          const jsonSheet = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+          displayTable(jsonSheet);
+
+          // Habilitar el botón de cálculo después de cargar el archivo
+          document.getElementById('bulk-btn').disabled = false;
+        };
+
+        reader.readAsArrayBuffer(file);
+      }
+
+      function displayTable(data) {
+        let table = '<thead><tr>';
+        for (let header of data[0]) {
+          table += `<th>${header || ''}</th>`;
+        }
+        table += '</tr></thead><tbody>';
+        for (let i = 1; i < data.length; i++) {
+          table += '<tr>';
+          for (let cell of data[i]) {
+            table += `<td>${cell !== undefined ? cell : ''}</td>`;
+          }
+          table += '</tr>';
+        }
+        table += '</tbody>';
+
+        document.getElementById('excelTable').innerHTML = table;
+
+        // Initialize DataTable if available
+        if (typeof $.fn.DataTable === 'function') {
+          $('#excelTable').DataTable();
+        }
+      }
+      document.getElementById('fileInput').addEventListener('change', handleFile, false);
+
+      function uploadFile() {
+        const fileInput = document.getElementById('fileInput');
+        const file = fileInput.files[0];
+
+        if (!file) {
+          alert('Please select a file first.');
+          return;
+        }
+
+        // Imprimir el nombre del archivo y la ruta en la consola
+        console.log('Nombre del archivo:', file.name);
+        console.log('Ruta del archivo:', fileInput.value);
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        fetch('/upload', {
+          method: 'POST',
+          body: formData
+        })
+          .then(response => {
+            if (!response.ok) {
+              return response.text().then(text => {
+                throw new Error(`Server error: ${text}`);
+              });
+            }
+            return response.json();
+          })
+          .then(data => {
+            console.log('Response Data:', data);
+
+            const tableElement = $('#excelTable');
+            tableElement.html(''); // Limpiar tabla antes de añadir nuevas filas
+
+            if (data && Array.isArray(data.data)) {
+              const headers = ['Row Number', 'Acid Gas Loading', 'Temperature', 'HSAS', 'Velocity', 'Amine Type', 'Amine Concentration', 'Material', 'CR', 'CR (mm/y)', 'CR (mpy)'];
+              let tableHtml = '<thead><tr>';
+              headers.forEach(header => {
+                tableHtml += `<th>${header}</th>`;
+              });
+              tableHtml += '</tr></thead><tbody>';
+
+              data.data.forEach(row => {
+                const tr = document.createElement('tr');
+
+                if (row.material === '300 Series SS') {
+                  fetch('/calculate_cr_300ss', {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ acidGasLoading: row.acid_gas_loading })
+                  })
+                    .then(response => response.json())
+                    .then(crData => {
+                      tableHtml += `<tr>
+                              <td>${row.row_number}</td>
+                              <td>${row.acid_gas_loading}</td>
+                              <td>${row.temperature}</td>
+                              <td>${row.HSAS}</td>
+                              <td>${row.velocity}</td>
+                              <td>${row.amine_type}</td>
+                              <td>${row.amine_concentration}</td>
+                              <td>${row.material}</td>
+                              <td></td> <!-- Columna CR general vacía -->
+                              <td>${crData.cr_mm_year}</td>
+                              <td>${crData.cr_mpy}</td>
+                            </tr>`;
+                      tableElement.html(tableHtml);
+                      tableElement.DataTable();  // Inicializa DataTables
+                    })
+                    .catch(error => {
+                      console.error('Error fetching CR value for 300 Series SS:', error);
+                      tableHtml += `<tr>
+                              <td>${row.row_number}</td>
+                              <td>${row.acid_gas_loading}</td>
+                              <td>${row.temperature}</td>
+                              <td>${row.HSAS}</td>
+                              <td>${row.velocity}</td>
+                              <td>${row.amine_type}</td>
+                              <td>${row.amine_concentration}</td>
+                              <td>${row.material}</td>
+                              <td>Error</td> <!-- Columna CR general con error -->
+                              <td>Error</td>
+                              <td>Error</td>
+                            </tr>`;
+                      tableElement.html(tableHtml);
+                      tableElement.DataTable();  // Inicializa DataTables
+                    });
+                } else {
+                  tableHtml += `<tr>
+                            <td>${row.row_number}</td>
+                            <td>${row.acid_gas_loading}</td>
+                            <td>${row.temperature}</td>
+                            <td>${row.HSAS}</td>
+                            <td>${row.velocity}</td>
+                            <td>${row.amine_type}</td>
+                            <td>${row.amine_concentration}</td>
+                            <td>${row.material}</td>
+                            <td>${row.CR || 'error'}</td> <!-- Columna CR general -->
+                            <td></td> <!-- Columna CR (mm/y) vacía -->
+                            <td></td>
+                          </tr>`;
+                  tableElement.html(tableHtml);
+                  tableElement.DataTable();  // Inicializa DataTables
+                }
+              });
+
+              // Mostrar el botón de descarga
+              document.getElementById('download-btn').style.display = 'inline-block';
+            } else {
+              tableElement.html('<tr><td colspan="11">No data found.</td></tr>');
+              // Ocultar el botón de descarga si no hay datos
+              document.getElementById('download-btn').style.display = 'none';
+            }
+          })
+          .catch(error => {
+            console.error('Error:', error);
+            const tableElement = $('#excelTable');
+            tableElement.html('<tr><td colspan="11">Error: ' + error.message + '</td></tr>');
+            // Ocultar el botón de descarga en caso de error
+            document.getElementById('download-btn').style.display = 'none';
+          });
+      }
+
+      function downloadExcel() {
+        const table = document.getElementById('excelTable');
+        const rows = table.querySelectorAll('tbody tr');
+
+        // Extraer los datos de la tabla
+        const data = [];
+        rows.forEach(row => {
+          const cells = row.querySelectorAll('td');
+          const rowData = Array.from(cells).map(cell => cell.textContent);
+          data.push(rowData);
+        });
+
+        // Extraer los encabezados de la tabla
+        const headers = Array.from(table.querySelectorAll('thead th')).map(th => th.textContent);
+
+        // Crear una hoja de trabajo con los datos
+        const ws = XLSX.utils.aoa_to_sheet([headers, ...data]);
+
+        // Crear un libro de trabajo y agregar la hoja de trabajo
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
+
+        // Generar un archivo Excel y descargarlo
+        XLSX.writeFile(wb, 'table_data.xlsx');
+      }
+
+    </script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.2/xlsx.full.min.js"></script>
+
+</body>
+
+</html>

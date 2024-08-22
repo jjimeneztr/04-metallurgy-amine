@@ -1,0 +1,13 @@
+numpy
+pandas
+Flask
+mpld3
+matplotlib
+scipy
+flask-login
+ldap3
+pyodbc
+gunicorn
+uvicorn
+sqlalchemy
+plotly
